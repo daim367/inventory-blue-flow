@@ -2,41 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Inventory Management Design System - Light Blue & White Theme */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 210 25% 98%;
+    --foreground: 215 25% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 215 25% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 213 94% 68%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 213 94% 60%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 215 25% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 40% 95%;
+    --muted-foreground: 215 15% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 100% 97%;
+    --accent-foreground: 213 94% 68%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 214 31% 91%;
+    --input: 214 31% 91%;
+    --ring: 213 94% 68%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* Custom inventory theme colors */
+    --inventory-blue: 213 94% 68%;
+    --inventory-blue-light: 210 100% 97%;
+    --inventory-blue-dark: 213 94% 60%;
+    --inventory-success: 142 76% 36%;
+    --inventory-warning: 38 92% 50%;
+    --inventory-error: 0 84% 60%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(213, 94%, 68%), hsl(210, 100%, 85%));
+    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%), hsl(210, 25%, 98%));
+    --gradient-header: linear-gradient(135deg, hsl(213, 94%, 68%), hsl(213, 94%, 60%));
+
+    /* Shadows */
+    --shadow-card: 0 4px 6px -1px hsl(213, 94%, 68%, 0.1), 0 2px 4px -1px hsl(213, 94%, 68%, 0.06);
+    --shadow-elevated: 0 10px 15px -3px hsl(213, 94%, 68%, 0.1), 0 4px 6px -2px hsl(213, 94%, 68%, 0.05);
+    --shadow-button: 0 2px 4px hsl(213, 94%, 68%, 0.2);
+
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -101,5 +120,38 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .inventory-card {
+    @apply bg-gradient-to-br from-white to-accent border border-border rounded-xl;
+    box-shadow: var(--shadow-card);
+  }
+
+  .inventory-button-primary {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground;
+    background: var(--gradient-primary);
+    box-shadow: var(--shadow-button);
+  }
+
+  .inventory-header {
+    background: var(--gradient-header);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .inventory-success {
+    @apply text-white;
+    background-color: hsl(var(--inventory-success));
+  }
+
+  .inventory-warning {
+    @apply text-white;
+    background-color: hsl(var(--inventory-warning));
+  }
+
+  .inventory-error {
+    @apply text-white;
+    background-color: hsl(var(--inventory-error));
   }
 }

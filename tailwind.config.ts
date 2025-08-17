@@ -26,7 +26,8 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					hover: 'hsl(var(--primary-hover))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -51,6 +52,14 @@ export default {
 				card: {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
+				},
+				inventory: {
+					blue: 'hsl(var(--inventory-blue))',
+					'blue-light': 'hsl(var(--inventory-blue-light))',
+					'blue-dark': 'hsl(var(--inventory-blue-dark))',
+					success: 'hsl(var(--inventory-success))',
+					warning: 'hsl(var(--inventory-warning))',
+					error: 'hsl(var(--inventory-error))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
