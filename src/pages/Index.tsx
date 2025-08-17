@@ -14,6 +14,7 @@ export interface Product {
   formula: string;
   quantity: number;
   price?: number;
+  dateAdded: Date;
 }
 
 export interface Sale {
@@ -39,7 +40,13 @@ const Index = () => {
     const savedSales = localStorage.getItem('inventory-sales');
     
     if (savedProducts) {
-      setProducts(JSON.parse(savedProducts));
+      const parsedProducts = JSON.parse(savedProducts);
+      // Handle legacy products without dateAdded
+      const productsWithDates = parsedProducts.map((product: any) => ({
+        ...product,
+        dateAdded: product.dateAdded ? new Date(product.dateAdded) : new Date()
+      }));
+      setProducts(productsWithDates);
     }
     if (savedSales) {
       setSales(JSON.parse(savedSales).map((sale: any) => ({
@@ -58,26 +65,27 @@ const Index = () => {
     localStorage.setItem('inventory-sales', JSON.stringify(sales));
   }, [sales]);
 
-  const handleAddProduct = (product: Omit<Product, 'id'>) => {
+  const handleAddProduct = (product: Omit<Product, 'id' | 'dateAdded'>) => {
     const newProduct: Product = {
       ...product,
-      id: Date.now().toString()
+      id: Date.now().toString(),
+      dateAdded: new Date()
     };
     setProducts(prev => [...prev, newProduct]);
   };
 
-  const handleAddSale = (sale: Omit<Sale, 'id' | 'date'>) => {
+  const handleAddSale = (saleData: Omit<Sale, 'id'> & { date?: Date }) => {
     const newSale: Sale = {
-      ...sale,
+      ...saleData,
       id: Date.now().toString(),
-      date: new Date()
+      date: saleData.date || new Date()
     };
     
     // Update inventory - deduct sold quantity
     setProducts(prev => 
       prev.map(product => 
-        product.name === sale.productName 
-          ? { ...product, quantity: Math.max(0, product.quantity - sale.quantity) }
+        product.name === saleData.productName 
+          ? { ...product, quantity: Math.max(0, product.quantity - saleData.quantity) }
           : product
       )
     );
@@ -128,7 +136,7 @@ const Index = () => {
               <TrendingUp className="h-4 w-4 text-accent-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">${totalSales.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-primary">PKR {totalSales.toFixed(2)}</div>
               <p className="text-xs text-muted-foreground">
                 {sales.length} transactions
               </p>
@@ -141,7 +149,7 @@ const Index = () => {
               <BarChart3 className="h-4 w-4 text-accent-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">${totalInventoryValue.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-primary">PKR {totalInventoryValue.toFixed(2)}</div>
               <p className="text-xs text-muted-foreground">
                 Current stock value
               </p>

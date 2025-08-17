@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,14 +13,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { TrendingUp, Calculator, AlertTriangle } from "lucide-react";
 import { Product, Sale } from "@/pages/Index";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface AddSaleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddSale: (sale: Omit<Sale, 'id' | 'date'>) => void;
+  onAddSale: (sale: Omit<Sale, 'id'> & { date?: Date }) => void;
   products: Product[];
 }
 
@@ -27,6 +32,7 @@ export const AddSaleDialog = ({ open, onOpenChange, onAddSale, products }: AddSa
   const [selectedProduct, setSelectedProduct] = useState("");
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
+  const [saleDate, setSaleDate] = useState<Date>(new Date());
 
   const selectedProductData = products.find(p => p.id === selectedProduct);
   const totalAmount = quantity && price ? (parseFloat(price) * parseInt(quantity)).toFixed(2) : "0.00";
@@ -60,7 +66,8 @@ export const AddSaleDialog = ({ open, onOpenChange, onAddSale, products }: AddSa
         productName: selectedProductData.name,
         price: parseFloat(price),
         companyName: selectedProductData.company,
-        quantity: parseInt(quantity)
+        quantity: parseInt(quantity),
+        date: saleDate
       });
 
       toast({
@@ -71,6 +78,7 @@ export const AddSaleDialog = ({ open, onOpenChange, onAddSale, products }: AddSa
       setSelectedProduct("");
       setQuantity("");
       setPrice("");
+      setSaleDate(new Date());
       onOpenChange(false);
     }
   };
@@ -158,11 +166,38 @@ export const AddSaleDialog = ({ open, onOpenChange, onAddSale, products }: AddSa
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <Label>Sale Date *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !saleDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {saleDate ? format(saleDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={saleDate}
+                      onSelect={(date) => setSaleDate(date || new Date())}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
               {quantity && price && (
                 <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
                   <div className="flex justify-between items-center">
                     <span className="font-medium">Total Sale Amount:</span>
-                    <span className="text-2xl font-bold text-primary">${totalAmount}</span>
+                    <span className="text-2xl font-bold text-primary">PKR {totalAmount}</span>
                   </div>
                   {selectedProductData && (
                     <div className="text-sm text-muted-foreground mt-2">

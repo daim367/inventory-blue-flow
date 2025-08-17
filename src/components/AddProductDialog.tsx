@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,14 +14,17 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Plus, Package } from "lucide-react";
 import { Product } from "@/pages/Index";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface AddProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddProduct: (product: Omit<Product, 'id'>) => void;
+  onAddProduct: (product: Omit<Product, 'id' | 'dateAdded'>) => void;
   existingProducts: Product[];
 }
 
@@ -32,6 +37,7 @@ export const AddProductDialog = ({ open, onOpenChange, onAddProduct, existingPro
     quantity: "",
     price: ""
   });
+  const [productDate, setProductDate] = useState<Date>(new Date());
   const [selectedExistingProduct, setSelectedExistingProduct] = useState("");
   const [additionalQuantity, setAdditionalQuantity] = useState("");
 
@@ -62,6 +68,7 @@ export const AddProductDialog = ({ open, onOpenChange, onAddProduct, existingPro
       });
 
       setFormData({ name: "", company: "", formula: "", quantity: "", price: "" });
+      setProductDate(new Date());
     } else {
       if (!selectedExistingProduct || !additionalQuantity) {
         toast({
@@ -181,6 +188,33 @@ export const AddProductDialog = ({ open, onOpenChange, onAddProduct, existingPro
                         placeholder="Enter price (optional)"
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Date Added *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !productDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {productDate ? format(productDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={productDate}
+                          onSelect={(date) => setProductDate(date || new Date())}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   <Button type="submit" className="inventory-button-primary w-full">

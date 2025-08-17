@@ -7,7 +7,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, Calendar, Download } from "lucide-react";
 import { Sale } from "@/pages/Index";
 
 interface SalesHistoryProps {
@@ -15,6 +16,34 @@ interface SalesHistoryProps {
 }
 
 export const SalesHistory = ({ sales }: SalesHistoryProps) => {
+  const exportToCSV = () => {
+    const csvData = sales.map(sale => ({
+      'Product Name': sale.productName,
+      'Company': sale.companyName,
+      'Price': sale.price.toFixed(2),
+      'Units Sold': sale.quantity,
+      'Total Amount': (sale.price * sale.quantity).toFixed(2),
+      'Date': formatDate(sale.date)
+    }));
+
+    const headers = Object.keys(csvData[0] || {});
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => 
+        headers.map(header => `"${row[header as keyof typeof row]}"`).join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `sales-history-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const sortedSales = [...sales].sort((a, b) => b.date.getTime() - a.date.getTime());
 
   const formatDate = (date: Date) => {
@@ -43,6 +72,19 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
 
   return (
     <div className="space-y-4">
+      {/* Export Button */}
+      <div className="flex justify-end mb-4">
+        <Button
+          onClick={exportToCSV}
+          variant="outline"
+          className="flex items-center gap-2"
+          disabled={sales.length === 0}
+        >
+          <Download className="h-4 w-4" />
+          Export CSV
+        </Button>
+      </div>
+
       {/* Sales Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="p-4 bg-accent rounded-lg">
@@ -50,7 +92,7 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
             <div>
               <p className="text-sm font-medium text-muted-foreground">Total Sales</p>
               <p className="text-2xl font-bold text-primary">
-                ${sales.reduce((sum, sale) => sum + (sale.price * sale.quantity), 0).toFixed(2)}
+                PKR {sales.reduce((sum, sale) => sum + (sale.price * sale.quantity), 0).toFixed(2)}
               </p>
             </div>
             <TrendingUp className="h-8 w-8 text-accent-foreground" />
@@ -72,7 +114,7 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
             <div>
               <p className="text-sm font-medium text-muted-foreground">Avg. Sale Value</p>
               <p className="text-2xl font-bold text-primary">
-                ${sales.length > 0 
+                PKR {sales.length > 0 
                   ? (sales.reduce((sum, sale) => sum + (sale.price * sale.quantity), 0) / sales.length).toFixed(2)
                   : '0.00'
                 }
@@ -106,9 +148,9 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
                 <TableCell className="font-medium">{sale.productName}</TableCell>
                 <TableCell>{sale.companyName}</TableCell>
                 <TableCell className="text-right font-mono">{sale.quantity}</TableCell>
-                <TableCell className="text-right font-mono">${sale.price.toFixed(2)}</TableCell>
+                <TableCell className="text-right font-mono">PKR {sale.price.toFixed(2)}</TableCell>
                 <TableCell className="text-right font-mono font-semibold text-primary">
-                  ${getSaleAmount(sale)}
+                  PKR {getSaleAmount(sale)}
                 </TableCell>
                 <TableCell>
                   <Badge variant="default" className="inventory-success">
