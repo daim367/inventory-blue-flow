@@ -7,6 +7,7 @@ import { AddSaleDialog } from "@/components/AddSaleDialog";
 import { InventoryTable } from "@/components/InventoryTable";
 import { SalesHistory } from "@/components/SalesHistory";
 import { StockEntries } from "@/components/StockEntries";
+import { InstallButton } from "@/components/InstallButton";
 
 export interface Product {
   id: string;
@@ -153,7 +154,8 @@ const Index = () => {
               <h1 className="text-3xl font-bold text-white">Inventory Management</h1>
               <p className="text-white/80 mt-1">Manage your products and track sales efficiently</p>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
+              <InstallButton />
               <Package className="h-8 w-8 text-white" />
             </div>
           </div>
