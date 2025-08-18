@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Plus, Package, TrendingUp, ClipboardList, BarChart3 } from "lucide-react";
+import { Plus, Package, TrendingUp, ClipboardList, BarChart3, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddProductDialog } from "@/components/AddProductDialog";
 import { AddSaleDialog } from "@/components/AddSaleDialog";
 import { InventoryTable } from "@/components/InventoryTable";
 import { SalesHistory } from "@/components/SalesHistory";
+import { StockEntries } from "@/components/StockEntries";
 
 export interface Product {
   id: string;
@@ -26,18 +27,31 @@ export interface Sale {
   date: Date;
 }
 
+export interface StockEntry {
+  id: string;
+  productName: string;
+  company: string;
+  formula: string;
+  quantityChange: number;
+  type: 'new' | 'existing';
+  date: Date;
+}
+
 const Index = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
+  const [stockEntries, setStockEntries] = useState<StockEntry[]>([]);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showAddSale, setShowAddSale] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [showSalesHistory, setShowSalesHistory] = useState(false);
+  const [showStockEntries, setShowStockEntries] = useState(false);
 
   // Load data from localStorage on component mount
   useEffect(() => {
     const savedProducts = localStorage.getItem('inventory-products');
     const savedSales = localStorage.getItem('inventory-sales');
+    const savedEntries = localStorage.getItem('inventory-stock-entries');
     
     if (savedProducts) {
       const parsedProducts = JSON.parse(savedProducts);
@@ -54,6 +68,12 @@ const Index = () => {
         date: new Date(sale.date)
       })));
     }
+    if (savedEntries) {
+      setStockEntries(JSON.parse(savedEntries).map((e: any) => ({
+        ...e,
+        date: new Date(e.date)
+      })));
+    }
   }, []);
 
   // Save data to localStorage whenever products or sales change
@@ -65,6 +85,10 @@ const Index = () => {
     localStorage.setItem('inventory-sales', JSON.stringify(sales));
   }, [sales]);
 
+  useEffect(() => {
+    localStorage.setItem('inventory-stock-entries', JSON.stringify(stockEntries));
+  }, [stockEntries]);
+
   const handleAddProduct = (product: Omit<Product, 'id' | 'dateAdded'>) => {
     const newProduct: Product = {
       ...product,
@@ -72,6 +96,28 @@ const Index = () => {
       dateAdded: new Date()
     };
     setProducts(prev => [...prev, newProduct]);
+  };
+
+  const handleIncreaseProduct = (productId: string, addQuantity: number, date: Date) => {
+    setProducts(prev => prev.map(p => p.id === productId ? { ...p, quantity: p.quantity + addQuantity } : p));
+    const p = products.find(p => p.id === productId);
+    if (p) {
+      const newEntry: StockEntry = {
+        id: Date.now().toString(),
+        productName: p.name,
+        company: p.company,
+        formula: p.formula,
+        quantityChange: addQuantity,
+        type: 'existing',
+        date
+      };
+      setStockEntries(prev => [...prev, newEntry]);
+    }
+  };
+
+  const handleLogStockEntry = (entry: Omit<StockEntry, 'id'>) => {
+    const newEntry: StockEntry = { ...entry, id: Date.now().toString() };
+    setStockEntries(prev => [...prev, newEntry]);
   };
 
   const handleAddSale = (saleData: Omit<Sale, 'id'> & { date?: Date }) => {
@@ -192,6 +238,15 @@ const Index = () => {
             <BarChart3 className="h-6 w-6" />
             <span>Sales History</span>
           </Button>
+
+          <Button 
+            onClick={() => setShowStockEntries(!showStockEntries)}
+            variant="secondary" 
+            className="h-20 flex flex-col items-center justify-center space-y-2"
+          >
+            <History className="h-6 w-6" />
+            <span>Stock Entry Log</span>
+          </Button>
         </div>
 
         {/* Content Sections */}
@@ -218,6 +273,18 @@ const Index = () => {
             </CardContent>
           </Card>
         )}
+
+        {showStockEntries && (
+          <Card className="inventory-card mb-8">
+            <CardHeader>
+              <CardTitle>Stock Entry Log</CardTitle>
+              <CardDescription>See when products were added as new or existing</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <StockEntries entries={stockEntries} />
+            </CardContent>
+          </Card>
+        )}
       </main>
 
       {/* Dialogs */}
@@ -226,6 +293,8 @@ const Index = () => {
         onOpenChange={setShowAddProduct}
         onAddProduct={handleAddProduct}
         existingProducts={products}
+        onIncreaseProduct={handleIncreaseProduct}
+        onLogStockEntry={handleLogStockEntry}
       />
       
       <AddSaleDialog 

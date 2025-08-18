@@ -20,9 +20,8 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
     const csvData = sales.map(sale => ({
       'Product Name': sale.productName,
       'Company': sale.companyName,
-      'Price': sale.price.toFixed(2),
+      'Price (PKR)': sale.price.toFixed(2),
       'Units Sold': sale.quantity,
-      'Total Amount': (sale.price * sale.quantity).toFixed(2),
       'Date': formatDate(sale.date)
     }));
 

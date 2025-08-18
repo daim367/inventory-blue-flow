@@ -62,10 +62,10 @@ export const InventoryTable = ({ products }: InventoryTableProps) => {
                 <TableCell className="text-sm text-muted-foreground">{product.formula}</TableCell>
                 <TableCell className="text-right font-mono">{product.quantity}</TableCell>
                 <TableCell className="text-right font-mono">
-                  {product.price ? `$${product.price.toFixed(2)}` : '-'}
+                  {product.price ? `PKR ${product.price.toFixed(2)}` : '-'}
                 </TableCell>
                 <TableCell className="text-right font-mono">
-                  {product.price ? `$${totalValue.toFixed(2)}` : '-'}
+                  {product.price ? `PKR ${totalValue.toFixed(2)}` : '-'}
                 </TableCell>
                 <TableCell>
                   <Badge variant={status.variant} className="flex items-center gap-1 w-fit">

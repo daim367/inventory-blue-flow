@@ -26,9 +26,18 @@ interface AddProductDialogProps {
   onOpenChange: (open: boolean) => void;
   onAddProduct: (product: Omit<Product, 'id' | 'dateAdded'>) => void;
   existingProducts: Product[];
+  onIncreaseProduct: (productId: string, addQuantity: number, date: Date) => void;
+  onLogStockEntry: (entry: {
+    productName: string;
+    company: string;
+    formula: string;
+    quantityChange: number;
+    type: 'new' | 'existing';
+    date: Date;
+  }) => void;
 }
 
-export const AddProductDialog = ({ open, onOpenChange, onAddProduct, existingProducts }: AddProductDialogProps) => {
+export const AddProductDialog = ({ open, onOpenChange, onAddProduct, existingProducts, onIncreaseProduct, onLogStockEntry }: AddProductDialogProps) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
@@ -62,6 +71,15 @@ export const AddProductDialog = ({ open, onOpenChange, onAddProduct, existingPro
         price: formData.price ? parseFloat(formData.price) : undefined
       });
 
+      onLogStockEntry({
+        productName: formData.name,
+        company: formData.company,
+        formula: formData.formula,
+        quantityChange: parseInt(formData.quantity),
+        type: 'new',
+        date: productDate
+      });
+
       toast({
         title: "Product Added",
         description: `${formData.name} has been added to inventory.`,
@@ -81,13 +99,7 @@ export const AddProductDialog = ({ open, onOpenChange, onAddProduct, existingPro
 
       const existing = existingProducts.find(p => p.id === selectedExistingProduct);
       if (existing) {
-        onAddProduct({
-          name: existing.name,
-          company: existing.company,
-          formula: existing.formula,
-          quantity: existing.quantity + parseInt(additionalQuantity),
-          price: existing.price
-        });
+        onIncreaseProduct(selectedExistingProduct, parseInt(additionalQuantity), productDate);
 
         toast({
           title: "Inventory Updated",
@@ -261,6 +273,33 @@ export const AddProductDialog = ({ open, onOpenChange, onAddProduct, existingPro
                       placeholder="Enter quantity to add"
                       required
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Date *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !productDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {productDate ? format(productDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={productDate}
+                          onSelect={(date) => setProductDate(date || new Date())}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   <Button type="submit" className="inventory-button-primary w-full">
