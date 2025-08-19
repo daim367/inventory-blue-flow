@@ -8,14 +8,21 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Calendar, Download } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { TrendingUp, CalendarIcon, Download, X } from "lucide-react";
 import { Sale } from "@/pages/Index";
+import { useState } from "react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface SalesHistoryProps {
   sales: Sale[];
 }
 
 export const SalesHistory = ({ sales }: SalesHistoryProps) => {
+  const [selectedDate, setSelectedDate] = useState<Date>();
+
   const exportToCSV = () => {
     const csvData = sales.map(sale => ({
       'Product Name': sale.productName,
@@ -43,7 +50,16 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
     document.body.removeChild(link);
   };
 
-  const sortedSales = [...sales].sort((a, b) => b.date.getTime() - a.date.getTime());
+  // Filter sales by selected date if any
+  const filteredSales = selectedDate 
+    ? sales.filter(sale => {
+        const saleDate = new Date(sale.date);
+        const filterDate = new Date(selectedDate);
+        return saleDate.toDateString() === filterDate.toDateString();
+      })
+    : sales;
+
+  const sortedSales = [...filteredSales].sort((a, b) => b.date.getTime() - a.date.getTime());
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -59,6 +75,10 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
     return (sale.price * sale.quantity).toFixed(2);
   };
 
+  const clearDateFilter = () => {
+    setSelectedDate(undefined);
+  };
+
   if (sales.length === 0) {
     return (
       <div className="text-center py-8">
@@ -71,8 +91,43 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
 
   return (
     <div className="space-y-4">
-      {/* Export Button */}
-      <div className="flex justify-end mb-4">
+      {/* Date Filter and Export Controls */}
+      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-[240px] justify-start text-left font-normal",
+                  !selectedDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? format(selectedDate, "PPP") : "Filter by date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          {selectedDate && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearDateFilter}
+              className="h-9 px-2"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
         <Button
           onClick={exportToCSV}
           variant="outline"
@@ -90,9 +145,9 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Total Sales</p>
-              <p className="text-2xl font-bold text-primary">
-                PKR {sales.reduce((sum, sale) => sum + (sale.price * sale.quantity), 0).toFixed(2)}
-              </p>
+               <p className="text-2xl font-bold text-primary">
+                PKR {filteredSales.reduce((sum, sale) => sum + (sale.price * sale.quantity), 0).toFixed(2)}
+               </p>
             </div>
             <TrendingUp className="h-8 w-8 text-accent-foreground" />
           </div>
@@ -102,7 +157,7 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Total Transactions</p>
-              <p className="text-2xl font-bold text-primary">{sales.length}</p>
+              <p className="text-2xl font-bold text-primary">{filteredSales.length}</p>
             </div>
             <Calendar className="h-8 w-8 text-accent-foreground" />
           </div>
@@ -112,12 +167,12 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Avg. Sale Value</p>
-              <p className="text-2xl font-bold text-primary">
-                PKR {sales.length > 0 
-                  ? (sales.reduce((sum, sale) => sum + (sale.price * sale.quantity), 0) / sales.length).toFixed(2)
+               <p className="text-2xl font-bold text-primary">
+                PKR {filteredSales.length > 0 
+                  ? (filteredSales.reduce((sum, sale) => sum + (sale.price * sale.quantity), 0) / filteredSales.length).toFixed(2)
                   : '0.00'
                 }
-              </p>
+               </p>
             </div>
             <TrendingUp className="h-8 w-8 text-accent-foreground" />
           </div>

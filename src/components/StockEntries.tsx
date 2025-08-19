@@ -7,15 +7,32 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { History, Package, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { History, Package, Plus, CalendarIcon, X } from "lucide-react";
 import { StockEntry } from "@/pages/Index";
+import { useState } from "react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface StockEntriesProps {
   entries: StockEntry[];
 }
 
 export const StockEntries = ({ entries }: StockEntriesProps) => {
-  const sortedEntries = [...entries].sort((a, b) => b.date.getTime() - a.date.getTime());
+  const [selectedDate, setSelectedDate] = useState<Date>();
+
+  // Filter entries by selected date if any
+  const filteredEntries = selectedDate 
+    ? entries.filter(entry => {
+        const entryDate = new Date(entry.date);
+        const filterDate = new Date(selectedDate);
+        return entryDate.toDateString() === filterDate.toDateString();
+      })
+    : entries;
+
+  const sortedEntries = [...filteredEntries].sort((a, b) => b.date.getTime() - a.date.getTime());
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -35,6 +52,10 @@ export const StockEntries = ({ entries }: StockEntriesProps) => {
     return type === 'new' ? Package : Plus;
   };
 
+  const clearDateFilter = () => {
+    setSelectedDate(undefined);
+  };
+
   if (entries.length === 0) {
     return (
       <div className="text-center py-8">
@@ -47,13 +68,50 @@ export const StockEntries = ({ entries }: StockEntriesProps) => {
 
   return (
     <div className="space-y-4">
+      {/* Date Filter */}
+      <div className="flex items-center gap-2 mb-4">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-[240px] justify-start text-left font-normal",
+                !selectedDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {selectedDate ? format(selectedDate, "PPP") : "Filter by date"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              initialFocus
+              className="p-3 pointer-events-auto"
+            />
+          </PopoverContent>
+        </Popover>
+        {selectedDate && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearDateFilter}
+            className="h-9 px-2"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="p-4 bg-accent rounded-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Total Entries</p>
-              <p className="text-2xl font-bold text-primary">{entries.length}</p>
+              <p className="text-2xl font-bold text-primary">{filteredEntries.length}</p>
             </div>
             <History className="h-8 w-8 text-accent-foreground" />
           </div>
@@ -63,9 +121,9 @@ export const StockEntries = ({ entries }: StockEntriesProps) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">New Products</p>
-              <p className="text-2xl font-bold text-primary">
-                {entries.filter(e => e.type === 'new').length}
-              </p>
+               <p className="text-2xl font-bold text-primary">
+                {filteredEntries.filter(e => e.type === 'new').length}
+               </p>
             </div>
             <Package className="h-8 w-8 text-accent-foreground" />
           </div>
@@ -75,9 +133,9 @@ export const StockEntries = ({ entries }: StockEntriesProps) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Stock Updates</p>
-              <p className="text-2xl font-bold text-primary">
-                {entries.filter(e => e.type === 'existing').length}
-              </p>
+               <p className="text-2xl font-bold text-primary">
+                {filteredEntries.filter(e => e.type === 'existing').length}
+               </p>
             </div>
             <Plus className="h-8 w-8 text-accent-foreground" />
           </div>

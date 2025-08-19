@@ -7,14 +7,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Package } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { AlertTriangle, Package, CalendarIcon, X } from "lucide-react";
 import { Product } from "@/pages/Index";
+import { useState } from "react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface InventoryTableProps {
   products: Product[];
 }
 
 export const InventoryTable = ({ products }: InventoryTableProps) => {
+  const [selectedDate, setSelectedDate] = useState<Date>();
+
   const getStockStatus = (quantity: number) => {
     if (quantity === 0) {
       return { label: "Out of Stock", variant: "destructive" as const, icon: AlertTriangle };
@@ -23,6 +31,19 @@ export const InventoryTable = ({ products }: InventoryTableProps) => {
     } else {
       return { label: "In Stock", variant: "default" as const, icon: Package };
     }
+  };
+
+  // Filter products by selected date if any
+  const filteredProducts = selectedDate 
+    ? products.filter(product => {
+        const productDate = new Date(product.dateAdded);
+        const filterDate = new Date(selectedDate);
+        return productDate.toDateString() === filterDate.toDateString();
+      })
+    : products;
+
+  const clearDateFilter = () => {
+    setSelectedDate(undefined);
   };
 
   if (products.length === 0) {
@@ -36,48 +57,87 @@ export const InventoryTable = ({ products }: InventoryTableProps) => {
   }
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Product Name</TableHead>
-            <TableHead>Company</TableHead>
-            <TableHead>Formula</TableHead>
-            <TableHead className="text-right">Quantity</TableHead>
-            <TableHead className="text-right">Price/Unit</TableHead>
-            <TableHead className="text-right">Total Value</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {products.map((product) => {
-            const status = getStockStatus(product.quantity);
-            const StatusIcon = status.icon;
-            const totalValue = (product.price || 0) * product.quantity;
-            
-            return (
-              <TableRow key={product.id}>
-                <TableCell className="font-medium">{product.name}</TableCell>
-                <TableCell>{product.company}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{product.formula}</TableCell>
-                <TableCell className="text-right font-mono">{product.quantity}</TableCell>
-                <TableCell className="text-right font-mono">
-                  {product.price ? `PKR ${product.price.toFixed(2)}` : '-'}
-                </TableCell>
-                <TableCell className="text-right font-mono">
-                  {product.price ? `PKR ${totalValue.toFixed(2)}` : '-'}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={status.variant} className="flex items-center gap-1 w-fit">
-                    <StatusIcon className="h-3 w-3" />
-                    {status.label}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+    <div className="space-y-4">
+      {/* Date Filter */}
+      <div className="flex items-center gap-2 mb-4">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-[240px] justify-start text-left font-normal",
+                !selectedDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {selectedDate ? format(selectedDate, "PPP") : "Filter by date added"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              initialFocus
+              className="p-3 pointer-events-auto"
+            />
+          </PopoverContent>
+        </Popover>
+        {selectedDate && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearDateFilter}
+            className="h-9 px-2"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Product Name</TableHead>
+              <TableHead>Company</TableHead>
+              <TableHead>Formula</TableHead>
+              <TableHead className="text-right">Quantity</TableHead>
+              <TableHead className="text-right">Price/Unit</TableHead>
+              <TableHead className="text-right">Total Value</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredProducts.map((product) => {
+              const status = getStockStatus(product.quantity);
+              const StatusIcon = status.icon;
+              const totalValue = (product.price || 0) * product.quantity;
+              
+              return (
+                <TableRow key={product.id}>
+                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>{product.company}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{product.formula}</TableCell>
+                  <TableCell className="text-right font-mono">{product.quantity}</TableCell>
+                  <TableCell className="text-right font-mono">
+                    {product.price ? `PKR ${product.price.toFixed(2)}` : '-'}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {product.price ? `PKR ${totalValue.toFixed(2)}` : '-'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={status.variant} className="flex items-center gap-1 w-fit">
+                      <StatusIcon className="h-3 w-3" />
+                      {status.label}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
