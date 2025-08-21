@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { TrendingUp, CalendarIcon, Download, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { CalendarIcon, TrendingUp, Download, X, Search } from "lucide-react";
 import { Sale } from "@/pages/Index";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -22,6 +23,7 @@ interface SalesHistoryProps {
 
 export const SalesHistory = ({ sales }: SalesHistoryProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const exportToCSV = () => {
     const csvData = sales.map(sale => ({
@@ -50,14 +52,20 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
     document.body.removeChild(link);
   };
 
-  // Filter sales by selected date if any
-  const filteredSales = selectedDate 
-    ? sales.filter(sale => {
-        const saleDate = new Date(sale.date);
-        const filterDate = new Date(selectedDate);
-        return saleDate.toDateString() === filterDate.toDateString();
-      })
-    : sales;
+  // Filter sales by search term and date
+  const filteredSales = sales.filter(sale => {
+    const matchesSearch = !searchTerm || 
+      sale.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sale.companyName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesDate = !selectedDate || (() => {
+      const saleDate = new Date(sale.date);
+      const filterDate = new Date(selectedDate);
+      return saleDate.toDateString() === filterDate.toDateString();
+    })();
+    
+    return matchesSearch && matchesDate;
+  });
 
   const sortedSales = [...filteredSales].sort((a, b) => b.date.getTime() - a.date.getTime());
 
@@ -79,6 +87,10 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
     setSelectedDate(undefined);
   };
 
+  const clearSearchFilter = () => {
+    setSearchTerm("");
+  };
+
   if (sales.length === 0) {
     return (
       <div className="text-center py-8">
@@ -91,8 +103,30 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
 
   return (
     <div className="space-y-4">
-      {/* Date Filter and Export Controls */}
-      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
+      {/* Search and Filter Controls */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-4">
+        {/* Search Input */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by product name or company..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+          {searchTerm && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearSearchFilter}
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        
+        {/* Date Filter and Export */}
         <div className="flex items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
@@ -127,16 +161,16 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
               <X className="h-4 w-4" />
             </Button>
           )}
+          <Button
+            onClick={exportToCSV}
+            variant="outline"
+            className="flex items-center gap-2"
+            disabled={sales.length === 0}
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
         </div>
-        <Button
-          onClick={exportToCSV}
-          variant="outline"
-          className="flex items-center gap-2"
-          disabled={sales.length === 0}
-        >
-          <Download className="h-4 w-4" />
-          Export CSV
-        </Button>
       </div>
 
       {/* Sales Summary */}
@@ -159,7 +193,7 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
               <p className="text-sm font-medium text-muted-foreground">Total Transactions</p>
               <p className="text-2xl font-bold text-primary">{filteredSales.length}</p>
             </div>
-            <Calendar className="h-8 w-8 text-accent-foreground" />
+            <CalendarIcon className="h-8 w-8 text-accent-foreground" />
           </div>
         </div>
         

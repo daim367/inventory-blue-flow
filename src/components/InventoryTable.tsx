@@ -10,11 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { AlertTriangle, Package, CalendarIcon, X } from "lucide-react";
+import { AlertTriangle, Package, CalendarIcon, X, Search } from "lucide-react";
 import { Product } from "@/pages/Index";
 import { useState } from "react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 interface InventoryTableProps {
   products: Product[];
@@ -22,6 +23,7 @@ interface InventoryTableProps {
 
 export const InventoryTable = ({ products }: InventoryTableProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const getStockStatus = (quantity: number) => {
     if (quantity === 0) {
@@ -33,17 +35,28 @@ export const InventoryTable = ({ products }: InventoryTableProps) => {
     }
   };
 
-  // Filter products by selected date if any
-  const filteredProducts = selectedDate 
-    ? products.filter(product => {
-        const productDate = new Date(product.dateAdded);
-        const filterDate = new Date(selectedDate);
-        return productDate.toDateString() === filterDate.toDateString();
-      })
-    : products;
+  // Filter products by search term and date
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = !searchTerm || 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.formula.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.company.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesDate = !selectedDate || (() => {
+      const productDate = new Date(product.dateAdded);
+      const filterDate = new Date(selectedDate);
+      return productDate.toDateString() === filterDate.toDateString();
+    })();
+    
+    return matchesSearch && matchesDate;
+  });
 
   const clearDateFilter = () => {
     setSelectedDate(undefined);
+  };
+
+  const clearSearchFilter = () => {
+    setSearchTerm("");
   };
 
   if (products.length === 0) {
@@ -58,41 +71,65 @@ export const InventoryTable = ({ products }: InventoryTableProps) => {
 
   return (
     <div className="space-y-4">
-      {/* Date Filter */}
-      <div className="flex items-center gap-2 mb-4">
-        <Popover>
-          <PopoverTrigger asChild>
+      {/* Search and Filter Controls */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-4">
+        {/* Search Input */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by product name, formula, or company..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+          {searchTerm && (
             <Button
-              variant="outline"
-              className={cn(
-                "w-[240px] justify-start text-left font-normal",
-                !selectedDate && "text-muted-foreground"
-              )}
+              variant="ghost"
+              size="sm"
+              onClick={clearSearchFilter}
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {selectedDate ? format(selectedDate, "PPP") : "Filter by date added"}
+              <X className="h-4 w-4" />
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              initialFocus
-              className="p-3 pointer-events-auto"
-            />
-          </PopoverContent>
-        </Popover>
-        {selectedDate && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearDateFilter}
-            className="h-9 px-2"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
+          )}
+        </div>
+        
+        {/* Date Filter */}
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-[240px] justify-start text-left font-normal",
+                  !selectedDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? format(selectedDate, "PPP") : "Filter by date added"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          {selectedDate && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearDateFilter}
+              className="h-9 px-2"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="rounded-md border">

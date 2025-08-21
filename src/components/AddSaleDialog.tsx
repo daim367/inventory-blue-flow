@@ -11,11 +11,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { TrendingUp, Calculator, AlertTriangle } from "lucide-react";
+import { TrendingUp, Calculator, AlertTriangle, Check, ChevronsUpDown } from "lucide-react";
 import { Product, Sale } from "@/pages/Index";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -33,6 +40,7 @@ export const AddSaleDialog = ({ open, onOpenChange, onAddSale, products }: AddSa
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
   const [saleDate, setSaleDate] = useState<Date>(new Date());
+  const [openProductSelect, setOpenProductSelect] = useState(false);
 
   const selectedProductData = products.find(p => p.id === selectedProduct);
   const totalAmount = quantity && price ? (parseFloat(price) * parseInt(quantity)).toFixed(2) : "0.00";
@@ -79,6 +87,7 @@ export const AddSaleDialog = ({ open, onOpenChange, onAddSale, products }: AddSa
       setQuantity("");
       setPrice("");
       setSaleDate(new Date());
+      setOpenProductSelect(false);
       onOpenChange(false);
     }
   };
@@ -108,18 +117,54 @@ export const AddSaleDialog = ({ open, onOpenChange, onAddSale, products }: AddSa
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="product">Product Name *</Label>
-                <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a product to sell" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products.map((product) => (
-                      <SelectItem key={product.id} value={product.id}>
-                        {product.name} - {product.company} (Stock: {product.quantity})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={openProductSelect} onOpenChange={setOpenProductSelect}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openProductSelect}
+                      className="w-full justify-between"
+                    >
+                      {selectedProduct
+                        ? products.find((product) => product.id === selectedProduct)?.name
+                        : "Select product..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="Search products..." />
+                      <CommandList>
+                        <CommandEmpty>No product found.</CommandEmpty>
+                        <CommandGroup>
+                          {products.map((product) => (
+                            <CommandItem
+                              key={product.id}
+                              value={`${product.name} ${product.company} ${product.formula}`}
+                              onSelect={() => {
+                                setSelectedProduct(product.id);
+                                setOpenProductSelect(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedProduct === product.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <div className="flex flex-col">
+                                <span className="font-medium">{product.name}</span>
+                                <span className="text-sm text-muted-foreground">
+                                  {product.company} • {product.formula} • Stock: {product.quantity}
+                                </span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {selectedProductData && (

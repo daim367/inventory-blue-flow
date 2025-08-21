@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { History, Package, Plus, CalendarIcon, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { CalendarIcon, Plus, RotateCcw, X, Search, History, Package } from "lucide-react";
 import { StockEntry } from "@/pages/Index";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -22,15 +23,23 @@ interface StockEntriesProps {
 
 export const StockEntries = ({ entries }: StockEntriesProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Filter entries by selected date if any
-  const filteredEntries = selectedDate 
-    ? entries.filter(entry => {
-        const entryDate = new Date(entry.date);
-        const filterDate = new Date(selectedDate);
-        return entryDate.toDateString() === filterDate.toDateString();
-      })
-    : entries;
+  // Filter entries by search term and date
+  const filteredEntries = entries.filter(entry => {
+    const matchesSearch = !searchTerm || 
+      entry.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.formula.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesDate = !selectedDate || (() => {
+      const entryDate = new Date(entry.date);
+      const filterDate = new Date(selectedDate);
+      return entryDate.toDateString() === filterDate.toDateString();
+    })();
+    
+    return matchesSearch && matchesDate;
+  });
 
   const sortedEntries = [...filteredEntries].sort((a, b) => b.date.getTime() - a.date.getTime());
 
@@ -56,6 +65,10 @@ export const StockEntries = ({ entries }: StockEntriesProps) => {
     setSelectedDate(undefined);
   };
 
+  const clearSearchFilter = () => {
+    setSearchTerm("");
+  };
+
   if (entries.length === 0) {
     return (
       <div className="text-center py-8">
@@ -68,41 +81,65 @@ export const StockEntries = ({ entries }: StockEntriesProps) => {
 
   return (
     <div className="space-y-4">
-      {/* Date Filter */}
-      <div className="flex items-center gap-2 mb-4">
-        <Popover>
-          <PopoverTrigger asChild>
+      {/* Search and Filter Controls */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-4">
+        {/* Search Input */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by product name, company, or formula..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+          {searchTerm && (
             <Button
-              variant="outline"
-              className={cn(
-                "w-[240px] justify-start text-left font-normal",
-                !selectedDate && "text-muted-foreground"
-              )}
+              variant="ghost"
+              size="sm"
+              onClick={clearSearchFilter}
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {selectedDate ? format(selectedDate, "PPP") : "Filter by date"}
+              <X className="h-4 w-4" />
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              initialFocus
-              className="p-3 pointer-events-auto"
-            />
-          </PopoverContent>
-        </Popover>
-        {selectedDate && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearDateFilter}
-            className="h-9 px-2"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
+          )}
+        </div>
+        
+        {/* Date Filter */}
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-[240px] justify-start text-left font-normal",
+                  !selectedDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? format(selectedDate, "PPP") : "Filter by date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          {selectedDate && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearDateFilter}
+              className="h-9 px-2"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Summary Stats */}
