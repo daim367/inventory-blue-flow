@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Package, TrendingUp, ClipboardList, BarChart3, History } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddProductDialog } from "@/components/AddProductDialog";
@@ -44,9 +45,7 @@ const Index = () => {
   const [stockEntries, setStockEntries] = useState<StockEntry[]>([]);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showAddSale, setShowAddSale] = useState(false);
-  const [showInventory, setShowInventory] = useState(false);
-  const [showSalesHistory, setShowSalesHistory] = useState(false);
-  const [showStockEntries, setShowStockEntries] = useState(false);
+  const navigate = useNavigate();
 
   // Load data from localStorage on component mount
   useEffect(() => {
@@ -224,7 +223,7 @@ const Index = () => {
           </Button>
           
           <Button 
-            onClick={() => setShowInventory(!showInventory)}
+            onClick={() => navigate("/inventory")}
             variant="secondary"
             className="h-20 flex flex-col items-center justify-center space-y-2"
           >
@@ -233,7 +232,7 @@ const Index = () => {
           </Button>
           
           <Button 
-            onClick={() => setShowSalesHistory(!showSalesHistory)}
+            onClick={() => navigate("/sales-history")}
             variant="secondary" 
             className="h-20 flex flex-col items-center justify-center space-y-2"
           >
@@ -242,7 +241,7 @@ const Index = () => {
           </Button>
 
           <Button 
-            onClick={() => setShowStockEntries(!showStockEntries)}
+            onClick={() => navigate("/stock-entries")}
             variant="secondary" 
             className="h-20 flex flex-col items-center justify-center space-y-2"
           >
@@ -251,42 +250,6 @@ const Index = () => {
           </Button>
         </div>
 
-        {/* Content Sections */}
-        {showInventory && (
-          <Card className="inventory-card mb-8">
-            <CardHeader>
-              <CardTitle>Current Inventory</CardTitle>
-              <CardDescription>View and manage your product inventory</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <InventoryTable products={products} />
-            </CardContent>
-          </Card>
-        )}
-
-        {showSalesHistory && (
-          <Card className="inventory-card mb-8">
-            <CardHeader>
-              <CardTitle>Sales History</CardTitle>
-              <CardDescription>Track your sales performance over time</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <SalesHistory sales={sales} />
-            </CardContent>
-          </Card>
-        )}
-
-        {showStockEntries && (
-          <Card className="inventory-card mb-8">
-            <CardHeader>
-              <CardTitle>Stock Entry Log</CardTitle>
-              <CardDescription>See when products were added as new or existing</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <StockEntries entries={stockEntries} />
-            </CardContent>
-          </Card>
-        )}
       </main>
 
       {/* Dialogs */}
