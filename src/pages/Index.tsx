@@ -1,16 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Plus, Package, TrendingUp, ClipboardList, BarChart3, History } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddProductDialog } from "@/components/AddProductDialog";
 import { AddSaleDialog } from "@/components/AddSaleDialog";
-import { InventoryTable } from "@/components/InventoryTable";
-import { SalesHistory } from "@/components/SalesHistory";
-import { StockEntries } from "@/components/StockEntries";
 import { InstallButton } from "@/components/InstallButton";
+import { 
+  useProducts, 
+  useSales, 
+  useStockEntries, 
+  useAddProduct, 
+  useAddSale, 
+  useAddStockEntry,
+  useUpdateProductQuantity,
+  type Product,
+  type Sale,
+  type StockEntry
+} from "@/hooks/useInventoryData";
 
-export interface Product {
+// Legacy interfaces for compatibility
+export interface LegacyProduct {
   id: string;
   name: string;
   company: string;
@@ -20,7 +30,7 @@ export interface Product {
   dateAdded: Date;
 }
 
-export interface Sale {
+export interface LegacySale {
   id: string;
   productName: string;
   price: number;
@@ -29,7 +39,7 @@ export interface Sale {
   date: Date;
 }
 
-export interface StockEntry {
+export interface LegacyStockEntry {
   id: string;
   productName: string;
   company: string;
@@ -40,108 +50,104 @@ export interface StockEntry {
 }
 
 const Index = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [stockEntries, setStockEntries] = useState<StockEntry[]>([]);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showAddSale, setShowAddSale] = useState(false);
   const navigate = useNavigate();
 
-  // Load data from localStorage on component mount
-  useEffect(() => {
-    const savedProducts = localStorage.getItem('inventory-products');
-    const savedSales = localStorage.getItem('inventory-sales');
-    const savedEntries = localStorage.getItem('inventory-stock-entries');
-    
-    if (savedProducts) {
-      const parsedProducts = JSON.parse(savedProducts);
-      // Handle legacy products without dateAdded
-      const productsWithDates = parsedProducts.map((product: any) => ({
-        ...product,
-        dateAdded: product.dateAdded ? new Date(product.dateAdded) : new Date()
-      }));
-      setProducts(productsWithDates);
-    }
-    if (savedSales) {
-      setSales(JSON.parse(savedSales).map((sale: any) => ({
-        ...sale,
-        date: new Date(sale.date)
-      })));
-    }
-    if (savedEntries) {
-      setStockEntries(JSON.parse(savedEntries).map((e: any) => ({
-        ...e,
-        date: new Date(e.date)
-      })));
-    }
-  }, []);
+  // Database queries
+  const { data: products = [], isLoading: productsLoading } = useProducts();
+  const { data: sales = [], isLoading: salesLoading } = useSales();
+  const { data: stockEntries = [], isLoading: stockEntriesLoading } = useStockEntries();
 
-  // Save data to localStorage whenever products or sales change
-  useEffect(() => {
-    localStorage.setItem('inventory-products', JSON.stringify(products));
-  }, [products]);
+  // Mutations
+  const addProductMutation = useAddProduct();
+  const addSaleMutation = useAddSale();
+  const addStockEntryMutation = useAddStockEntry();
+  const updateProductQuantityMutation = useUpdateProductQuantity();
 
-  useEffect(() => {
-    localStorage.setItem('inventory-sales', JSON.stringify(sales));
-  }, [sales]);
-
-  useEffect(() => {
-    localStorage.setItem('inventory-stock-entries', JSON.stringify(stockEntries));
-  }, [stockEntries]);
-
-  const handleAddProduct = (product: Omit<Product, 'id' | 'dateAdded'>) => {
-    const newProduct: Product = {
-      ...product,
-      id: Date.now().toString(),
-      dateAdded: new Date()
-    };
-    setProducts(prev => [...prev, newProduct]);
+  const handleAddProduct = (product: Omit<LegacyProduct, 'id' | 'dateAdded'>) => {
+    addProductMutation.mutate({
+      name: product.name,
+      company: product.company,
+      formula: product.formula,
+      quantity: product.quantity,
+      price: product.price || 0
+    });
   };
 
   const handleIncreaseProduct = (productId: string, addQuantity: number, date: Date) => {
-    setProducts(prev => prev.map(p => p.id === productId ? { ...p, quantity: p.quantity + addQuantity } : p));
-    const p = products.find(p => p.id === productId);
-    if (p) {
-      const newEntry: StockEntry = {
-        id: Date.now().toString(),
-        productName: p.name,
-        company: p.company,
-        formula: p.formula,
-        quantityChange: addQuantity,
-        type: 'existing',
-        date
-      };
-      setStockEntries(prev => [...prev, newEntry]);
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      // Update product quantity
+      updateProductQuantityMutation.mutate({ 
+        id: productId, 
+        quantity: product.quantity + addQuantity 
+      });
+      
+      // Log stock entry
+      addStockEntryMutation.mutate({
+        product_id: productId,
+        product_name: product.name,
+        company: product.company || '',
+        formula: product.formula || '',
+        quantity: addQuantity,
+        entry_type: 'existing',
+        entry_date: date.toISOString()
+      });
     }
   };
 
-  const handleLogStockEntry = (entry: Omit<StockEntry, 'id'>) => {
-    const newEntry: StockEntry = { ...entry, id: Date.now().toString() };
-    setStockEntries(prev => [...prev, newEntry]);
+  const handleLogStockEntry = (entry: Omit<LegacyStockEntry, 'id'>) => {
+    addStockEntryMutation.mutate({
+      product_name: entry.productName,
+      company: entry.company,
+      formula: entry.formula,
+      quantity: entry.quantityChange,
+      entry_type: entry.type,
+      entry_date: entry.date.toISOString()
+    });
   };
 
-  const handleAddSale = (saleData: Omit<Sale, 'id'> & { date?: Date }) => {
-    const newSale: Sale = {
-      ...saleData,
-      id: Date.now().toString(),
-      date: saleData.date || new Date()
-    };
+  const handleAddSale = (saleData: Omit<LegacySale, 'id'> & { date?: Date }) => {
+    const product = products.find(p => p.name === saleData.productName);
+    const saleDate = saleData.date || new Date();
     
-    // Update inventory - deduct sold quantity
-    setProducts(prev => 
-      prev.map(product => 
-        product.name === saleData.productName 
-          ? { ...product, quantity: Math.max(0, product.quantity - saleData.quantity) }
-          : product
-      )
-    );
-    
-    setSales(prev => [...prev, newSale]);
+    addSaleMutation.mutate({
+      product_id: product?.id,
+      product_name: saleData.productName,
+      company: saleData.companyName,
+      quantity: saleData.quantity,
+      price: saleData.price,
+      total: saleData.price * saleData.quantity,
+      sale_date: saleDate.toISOString()
+    });
   };
 
-  const totalInventoryValue = products.reduce((sum, product) => sum + (product.quantity * (product.price || 0)), 0);
-  const totalSales = sales.reduce((sum, sale) => sum + (sale.price * sale.quantity), 0);
+  const totalInventoryValue = products.reduce((sum, product) => sum + (product.quantity * product.price), 0);
+  const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);
   const lowStockItems = products.filter(product => product.quantity < 10).length;
+  
+  // Convert database data to legacy format for existing components
+  const legacyProducts: LegacyProduct[] = products.map(p => ({
+    id: p.id,
+    name: p.name,
+    company: p.company || '',
+    formula: p.formula || '',
+    quantity: p.quantity,
+    price: p.price,
+    dateAdded: new Date(p.created_at)
+  }));
+
+  if (productsLoading || salesLoading || stockEntriesLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Package className="h-12 w-12 text-primary mx-auto mb-4 animate-spin" />
+          <p className="text-muted-foreground">Loading inventory data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -257,7 +263,7 @@ const Index = () => {
         open={showAddProduct}
         onOpenChange={setShowAddProduct}
         onAddProduct={handleAddProduct}
-        existingProducts={products}
+        existingProducts={legacyProducts}
         onIncreaseProduct={handleIncreaseProduct}
         onLogStockEntry={handleLogStockEntry}
       />
@@ -266,7 +272,7 @@ const Index = () => {
         open={showAddSale}
         onOpenChange={setShowAddSale}
         onAddSale={handleAddSale}
-        products={products}
+        products={legacyProducts}
       />
     </div>
   );

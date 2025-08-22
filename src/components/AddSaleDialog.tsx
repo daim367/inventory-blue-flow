@@ -23,15 +23,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { TrendingUp, Calculator, AlertTriangle, Check, ChevronsUpDown } from "lucide-react";
-import { Product, Sale } from "@/pages/Index";
+import { LegacyProduct, LegacySale } from "@/pages/Index";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 interface AddSaleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddSale: (sale: Omit<Sale, 'id'> & { date?: Date }) => void;
-  products: Product[];
+  onAddSale: (sale: Omit<LegacySale, 'id'> & { date?: Date }) => void;
+  products: LegacyProduct[];
 }
 
 export const AddSaleDialog = ({ open, onOpenChange, onAddSale, products }: AddSaleDialogProps) => {

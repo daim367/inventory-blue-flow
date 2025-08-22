@@ -16,7 +16,9 @@ export type Database = {
     Tables: {
       products: {
         Row: {
+          company: string | null
           created_at: string
+          formula: string | null
           id: string
           name: string
           price: number
@@ -24,7 +26,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          company?: string | null
           created_at?: string
+          formula?: string | null
           id?: string
           name: string
           price: number
@@ -32,7 +36,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          company?: string | null
           created_at?: string
+          formula?: string | null
           id?: string
           name?: string
           price?: number
@@ -43,6 +49,7 @@ export type Database = {
       }
       sales: {
         Row: {
+          company: string | null
           created_at: string
           id: string
           price: number
@@ -53,6 +60,7 @@ export type Database = {
           total: number
         }
         Insert: {
+          company?: string | null
           created_at?: string
           id?: string
           price: number
@@ -63,6 +71,7 @@ export type Database = {
           total: number
         }
         Update: {
+          company?: string | null
           created_at?: string
           id?: string
           price?: number
@@ -84,27 +93,33 @@ export type Database = {
       }
       stock_entries: {
         Row: {
+          company: string | null
           created_at: string
           entry_date: string
           entry_type: string
+          formula: string | null
           id: string
           product_id: string | null
           product_name: string
           quantity: number
         }
         Insert: {
+          company?: string | null
           created_at?: string
           entry_date?: string
           entry_type: string
+          formula?: string | null
           id?: string
           product_id?: string | null
           product_name: string
           quantity: number
         }
         Update: {
+          company?: string | null
           created_at?: string
           entry_date?: string
           entry_type?: string
+          formula?: string | null
           id?: string
           product_id?: string | null
           product_name?: string

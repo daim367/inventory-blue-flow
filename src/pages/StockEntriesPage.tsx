@@ -1,24 +1,36 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StockEntries } from "@/components/StockEntries";
 import { useNavigate } from "react-router-dom";
-import { StockEntry } from "./Index";
+import { useStockEntries } from "@/hooks/useInventoryData";
+import { LegacyStockEntry } from "./Index";
 
 const StockEntriesPage = () => {
-  const [stockEntries, setStockEntries] = useState<StockEntry[]>([]);
   const navigate = useNavigate();
+  const { data: stockEntries = [], isLoading } = useStockEntries();
 
-  useEffect(() => {
-    const savedEntries = localStorage.getItem('inventory-stock-entries');
-    if (savedEntries) {
-      setStockEntries(JSON.parse(savedEntries).map((e: any) => ({
-        ...e,
-        date: new Date(e.date)
-      })));
-    }
-  }, []);
+  // Convert to legacy format for existing components
+  const legacyStockEntries: LegacyStockEntry[] = stockEntries.map(e => ({
+    id: e.id,
+    productName: e.product_name,
+    company: e.company || '',
+    formula: e.formula || '',
+    quantityChange: e.quantity,
+    type: e.entry_type as 'new' | 'existing',
+    date: new Date(e.entry_date)
+  }));
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <History className="h-12 w-12 text-primary mx-auto mb-4 animate-spin" />
+          <p className="text-muted-foreground">Loading stock entries...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -48,7 +60,7 @@ const StockEntriesPage = () => {
             <CardDescription>See when products were added as new or existing</CardDescription>
           </CardHeader>
           <CardContent>
-            <StockEntries entries={stockEntries} />
+            <StockEntries entries={legacyStockEntries} />
           </CardContent>
         </Card>
       </main>

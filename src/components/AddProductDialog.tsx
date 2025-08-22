@@ -17,15 +17,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Plus, Package } from "lucide-react";
-import { Product } from "@/pages/Index";
+import { LegacyProduct } from "@/pages/Index";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 interface AddProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddProduct: (product: Omit<Product, 'id' | 'dateAdded'>) => void;
-  existingProducts: Product[];
+  onAddProduct: (product: Omit<LegacyProduct, 'id' | 'dateAdded'>) => void;
+  existingProducts: LegacyProduct[];
   onIncreaseProduct: (productId: string, addQuantity: number, date: Date) => void;
   onLogStockEntry: (entry: {
     productName: string;

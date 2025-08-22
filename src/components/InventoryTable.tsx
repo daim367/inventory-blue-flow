@@ -11,14 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AlertTriangle, Package, CalendarIcon, X, Search } from "lucide-react";
-import { Product } from "@/pages/Index";
+import { LegacyProduct } from "@/pages/Index";
 import { useState } from "react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 
 interface InventoryTableProps {
-  products: Product[];
+  products: LegacyProduct[];
 }
 
 export const InventoryTable = ({ products }: InventoryTableProps) => {

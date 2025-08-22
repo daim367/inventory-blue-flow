@@ -1,26 +1,36 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { InventoryTable } from "@/components/InventoryTable";
 import { useNavigate } from "react-router-dom";
-import { Product } from "./Index";
+import { useProducts, type Product } from "@/hooks/useInventoryData";
+import { LegacyProduct } from "./Index";
 
 const Inventory = () => {
-  const [products, setProducts] = useState<Product[]>([]);
   const navigate = useNavigate();
+  const { data: products = [], isLoading } = useProducts();
 
-  useEffect(() => {
-    const savedProducts = localStorage.getItem('inventory-products');
-    if (savedProducts) {
-      const parsedProducts = JSON.parse(savedProducts);
-      const productsWithDates = parsedProducts.map((product: any) => ({
-        ...product,
-        dateAdded: product.dateAdded ? new Date(product.dateAdded) : new Date()
-      }));
-      setProducts(productsWithDates);
-    }
-  }, []);
+  // Convert to legacy format for existing components
+  const legacyProducts: LegacyProduct[] = products.map(p => ({
+    id: p.id,
+    name: p.name,
+    company: p.company || '',
+    formula: p.formula || '',
+    quantity: p.quantity,
+    price: p.price,
+    dateAdded: new Date(p.created_at)
+  }));
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Package className="h-12 w-12 text-primary mx-auto mb-4 animate-spin" />
+          <p className="text-muted-foreground">Loading inventory...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,7 +60,7 @@ const Inventory = () => {
             <CardDescription>View and manage your product inventory</CardDescription>
           </CardHeader>
           <CardContent>
-            <InventoryTable products={products} />
+            <InventoryTable products={legacyProducts} />
           </CardContent>
         </Card>
       </main>

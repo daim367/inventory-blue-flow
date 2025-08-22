@@ -12,13 +12,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { CalendarIcon, Plus, RotateCcw, X, Search, History, Package } from "lucide-react";
-import { StockEntry } from "@/pages/Index";
+import { LegacyStockEntry } from "@/pages/Index";
 import { useState } from "react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 interface StockEntriesProps {
-  entries: StockEntry[];
+  entries: LegacyStockEntry[];
 }
 
 export const StockEntries = ({ entries }: StockEntriesProps) => {

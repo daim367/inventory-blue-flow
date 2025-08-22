@@ -1,24 +1,35 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SalesHistory } from "@/components/SalesHistory";
 import { useNavigate } from "react-router-dom";
-import { Sale } from "./Index";
+import { useSales } from "@/hooks/useInventoryData";
+import { LegacySale } from "./Index";
 
 const SalesHistoryPage = () => {
-  const [sales, setSales] = useState<Sale[]>([]);
   const navigate = useNavigate();
+  const { data: sales = [], isLoading } = useSales();
 
-  useEffect(() => {
-    const savedSales = localStorage.getItem('inventory-sales');
-    if (savedSales) {
-      setSales(JSON.parse(savedSales).map((sale: any) => ({
-        ...sale,
-        date: new Date(sale.date)
-      })));
-    }
-  }, []);
+  // Convert to legacy format for existing components
+  const legacySales: LegacySale[] = sales.map(s => ({
+    id: s.id,
+    productName: s.product_name,
+    price: s.price,
+    companyName: s.company || '',
+    quantity: s.quantity,
+    date: new Date(s.sale_date)
+  }));
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <TrendingUp className="h-12 w-12 text-primary mx-auto mb-4 animate-spin" />
+          <p className="text-muted-foreground">Loading sales history...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -48,7 +59,7 @@ const SalesHistoryPage = () => {
             <CardDescription>Track your sales performance over time</CardDescription>
           </CardHeader>
           <CardContent>
-            <SalesHistory sales={sales} />
+            <SalesHistory sales={legacySales} />
           </CardContent>
         </Card>
       </main>

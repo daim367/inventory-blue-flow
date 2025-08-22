@@ -12,13 +12,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { CalendarIcon, TrendingUp, Download, X, Search } from "lucide-react";
-import { Sale } from "@/pages/Index";
+import { LegacySale } from "@/pages/Index";
 import { useState } from "react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 interface SalesHistoryProps {
-  sales: Sale[];
+  sales: LegacySale[];
 }
 
 export const SalesHistory = ({ sales }: SalesHistoryProps) => {
@@ -79,7 +79,7 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
     });
   };
 
-  const getSaleAmount = (sale: Sale) => {
+  const getSaleAmount = (sale: LegacySale) => {
     return (sale.price * sale.quantity).toFixed(2);
   };
 
