@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AddProductDialog } from "@/components/AddProductDialog";
 import { AddSaleDialog } from "@/components/AddSaleDialog";
 import { InstallButton } from "@/components/InstallButton";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   useProducts, 
   useSales, 
@@ -53,6 +54,7 @@ const Index = () => {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showAddSale, setShowAddSale] = useState(false);
   const navigate = useNavigate();
+  const { signOut, user } = useAuth();
 
   // Database queries
   const { data: products = [], isLoading: productsLoading } = useProducts();
@@ -157,10 +159,13 @@ const Index = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white">Inventory Management</h1>
-              <p className="text-white/80 mt-1">Manage your products and track sales efficiently</p>
+              <p className="text-white/80 mt-1">Welcome, {user?.email} • Manage your products and track sales efficiently</p>
             </div>
             <div className="flex items-center space-x-3">
               <InstallButton />
+              <Button variant="outline" onClick={signOut} className="text-white border-white/20 hover:bg-white/10">
+                Sign Out
+              </Button>
               <Package className="h-8 w-8 text-white" />
             </div>
           </div>
