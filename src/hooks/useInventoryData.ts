@@ -18,6 +18,8 @@ export interface Sale {
   product_id?: string;
   product_name: string;
   company?: string;
+  customer_name?: string;
+  phone_number?: string;
   quantity: number;
   price: number;
   total: number;
@@ -202,6 +204,36 @@ export const useStockEntries = () => {
       
       if (error) throw error;
       return data as StockEntry[];
+    },
+  });
+};
+
+export const useDeleteProduct = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast({
+        title: "Success",
+        description: "Product deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete product",
+        variant: "destructive",
+      });
     },
   });
 };

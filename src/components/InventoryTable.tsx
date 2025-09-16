@@ -10,12 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { AlertTriangle, Package, CalendarIcon, X, Search } from "lucide-react";
+import { AlertTriangle, Package, CalendarIcon, X, Search, Trash2 } from "lucide-react";
 import { LegacyProduct } from "@/pages/Index";
 import { useState } from "react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { useDeleteProduct } from "@/hooks/useInventoryData";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface InventoryTableProps {
   products: LegacyProduct[];
@@ -24,6 +26,11 @@ interface InventoryTableProps {
 export const InventoryTable = ({ products }: InventoryTableProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [searchTerm, setSearchTerm] = useState("");
+  const deleteProduct = useDeleteProduct();
+
+  const handleDeleteProduct = (productId: string) => {
+    deleteProduct.mutate(productId);
+  };
 
   const getStockStatus = (quantity: number) => {
     if (quantity === 0) {
@@ -143,6 +150,7 @@ export const InventoryTable = ({ products }: InventoryTableProps) => {
               <TableHead className="text-right">Price/Unit</TableHead>
               <TableHead className="text-right">Total Value</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -168,6 +176,36 @@ export const InventoryTable = ({ products }: InventoryTableProps) => {
                       <StatusIcon className="h-3 w-3" />
                       {status.label}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Product</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{product.name}"? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               );

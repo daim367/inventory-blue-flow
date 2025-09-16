@@ -39,6 +39,8 @@ export const AddSaleDialog = ({ open, onOpenChange, onAddSale, products }: AddSa
   const [selectedProduct, setSelectedProduct] = useState("");
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [saleDate, setSaleDate] = useState<Date>(new Date());
   const [openProductSelect, setOpenProductSelect] = useState(false);
 
@@ -75,6 +77,8 @@ export const AddSaleDialog = ({ open, onOpenChange, onAddSale, products }: AddSa
         price: parseFloat(price),
         companyName: selectedProductData.company,
         quantity: parseInt(quantity),
+        customerName: customerName,
+        phoneNumber: phoneNumber,
         date: saleDate
       });
 
@@ -86,6 +90,8 @@ export const AddSaleDialog = ({ open, onOpenChange, onAddSale, products }: AddSa
       setSelectedProduct("");
       setQuantity("");
       setPrice("");
+      setCustomerName("");
+      setPhoneNumber("");
       setSaleDate(new Date());
       setOpenProductSelect(false);
       onOpenChange(false);
@@ -176,6 +182,29 @@ export const AddSaleDialog = ({ open, onOpenChange, onAddSale, products }: AddSa
                   </div>
                 </div>
               )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="customer-name">Customer Name</Label>
+                  <Input
+                    id="customer-name"
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Enter customer name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone-number">Phone Number</Label>
+                  <Input
+                    id="phone-number"
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="Enter phone number"
+                  />
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

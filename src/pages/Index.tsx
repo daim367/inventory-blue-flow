@@ -37,6 +37,8 @@ export interface LegacySale {
   price: number;
   companyName: string;
   quantity: number;
+  customerName?: string;
+  phoneNumber?: string;
   date: Date;
 }
 
@@ -118,6 +120,8 @@ const Index = () => {
       product_id: product?.id,
       product_name: saleData.productName,
       company: saleData.companyName,
+      customer_name: saleData.customerName,
+      phone_number: saleData.phoneNumber,
       quantity: saleData.quantity,
       price: saleData.price,
       total: saleData.price * saleData.quantity,

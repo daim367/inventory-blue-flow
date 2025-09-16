@@ -29,6 +29,8 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
     const csvData = sales.map(sale => ({
       'Product Name': sale.productName,
       'Company': sale.companyName,
+      'Customer Name': sale.customerName || '',
+      'Phone Number': sale.phoneNumber || '',
       'Price (PKR)': sale.price.toFixed(2),
       'Units Sold': sale.quantity,
       'Date': formatDate(sale.date)
@@ -52,11 +54,12 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
     document.body.removeChild(link);
   };
 
-  // Filter sales by search term and date
   const filteredSales = sales.filter(sale => {
     const matchesSearch = !searchTerm || 
       sale.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sale.companyName.toLowerCase().includes(searchTerm.toLowerCase());
+      sale.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (sale.customerName && sale.customerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (sale.phoneNumber && sale.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesDate = !selectedDate || (() => {
       const saleDate = new Date(sale.date);
@@ -109,7 +112,7 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by product name or company..."
+            placeholder="Search by product, company, customer name or phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -221,6 +224,8 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
               <TableHead>Date & Time</TableHead>
               <TableHead>Product Name</TableHead>
               <TableHead>Company</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Phone</TableHead>
               <TableHead className="text-right">Quantity</TableHead>
               <TableHead className="text-right">Price/Unit</TableHead>
               <TableHead className="text-right">Total Amount</TableHead>
@@ -235,6 +240,8 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
                 </TableCell>
                 <TableCell className="font-medium">{sale.productName}</TableCell>
                 <TableCell>{sale.companyName}</TableCell>
+                <TableCell>{sale.customerName || '-'}</TableCell>
+                <TableCell>{sale.phoneNumber || '-'}</TableCell>
                 <TableCell className="text-right font-mono">{sale.quantity}</TableCell>
                 <TableCell className="text-right font-mono">PKR {sale.price.toFixed(2)}</TableCell>
                 <TableCell className="text-right font-mono font-semibold text-primary">
