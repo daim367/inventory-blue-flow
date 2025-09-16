@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface Product {
   id: string;
@@ -9,6 +10,7 @@ export interface Product {
   formula?: string;
   quantity: number;
   price: number;
+  user_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -23,6 +25,7 @@ export interface Sale {
   quantity: number;
   price: number;
   total: number;
+  user_id?: string;
   sale_date: string;
   created_at: string;
 }
@@ -35,6 +38,7 @@ export interface StockEntry {
   formula?: string;
   quantity: number;
   entry_type: string;
+  user_id?: string;
   entry_date: string;
   created_at: string;
 }
@@ -58,12 +62,15 @@ export const useProducts = () => {
 export const useAddProduct = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (product: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (product: Omit<Product, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+      if (!user) throw new Error('User must be authenticated');
+      
       const { data, error } = await supabase
         .from('products')
-        .insert([product])
+        .insert([{ ...product, user_id: user.id }])
         .select()
         .single();
       
@@ -136,12 +143,15 @@ export const useAddSale = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const updateProductQuantity = useUpdateProductQuantity();
+  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (sale: Omit<Sale, 'id' | 'created_at'>) => {
+    mutationFn: async (sale: Omit<Sale, 'id' | 'created_at' | 'user_id'>) => {
+      if (!user) throw new Error('User must be authenticated');
+      
       const { data, error } = await supabase
         .from('sales')
-        .insert([sale])
+        .insert([{ ...sale, user_id: user.id }])
         .select()
         .single();
       
@@ -241,12 +251,15 @@ export const useDeleteProduct = () => {
 export const useAddStockEntry = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (entry: Omit<StockEntry, 'id' | 'created_at'>) => {
+    mutationFn: async (entry: Omit<StockEntry, 'id' | 'created_at' | 'user_id'>) => {
+      if (!user) throw new Error('User must be authenticated');
+      
       const { data, error } = await supabase
         .from('stock_entries')
-        .insert([entry])
+        .insert([{ ...entry, user_id: user.id }])
         .select()
         .single();
       
