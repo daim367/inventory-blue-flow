@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface Product {
   id: string;
@@ -9,6 +10,7 @@ export interface Product {
   formula?: string;
   quantity: number;
   price: number;
+  user_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -23,6 +25,7 @@ export interface Sale {
   quantity: number;
   price: number;
   total: number;
+  user_id?: string;
   sale_date: string;
   created_at: string;
 }
@@ -35,15 +38,20 @@ export interface StockEntry {
   formula?: string;
   quantity: number;
   entry_type: string;
+  user_id?: string;
   entry_date: string;
   created_at: string;
 }
 
 // Products queries and mutations
 export const useProducts = () => {
+  const { user } = useAuth();
+  
   return useQuery({
     queryKey: ['products'],
     queryFn: async () => {
+      if (!user) throw new Error('User not authenticated');
+      
       const { data, error } = await supabase
         .from('products')
         .select('*')
@@ -52,18 +60,22 @@ export const useProducts = () => {
       if (error) throw error;
       return data as Product[];
     },
+    enabled: !!user,
   });
 };
 
 export const useAddProduct = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (product: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (product: Omit<Product, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+      if (!user) throw new Error('User not authenticated');
+      
       const { data, error } = await supabase
         .from('products')
-        .insert([product])
+        .insert([{ ...product, user_id: user.id }])
         .select()
         .single();
       
@@ -78,6 +90,7 @@ export const useAddProduct = () => {
       });
     },
     onError: (error) => {
+      console.error('Error adding product:', error);
       toast({
         title: "Error",
         description: "Failed to add product",
@@ -118,9 +131,13 @@ export const useUpdateProductQuantity = () => {
 
 // Sales queries and mutations
 export const useSales = () => {
+  const { user } = useAuth();
+  
   return useQuery({
     queryKey: ['sales'],
     queryFn: async () => {
+      if (!user) throw new Error('User not authenticated');
+      
       const { data, error } = await supabase
         .from('sales')
         .select('*')
@@ -129,19 +146,23 @@ export const useSales = () => {
       if (error) throw error;
       return data as Sale[];
     },
+    enabled: !!user,
   });
 };
 
 export const useAddSale = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
   const updateProductQuantity = useUpdateProductQuantity();
 
   return useMutation({
-    mutationFn: async (sale: Omit<Sale, 'id' | 'created_at'>) => {
+    mutationFn: async (sale: Omit<Sale, 'id' | 'created_at' | 'user_id'>) => {
+      if (!user) throw new Error('User not authenticated');
+      
       const { data, error } = await supabase
         .from('sales')
-        .insert([sale])
+        .insert([{ ...sale, user_id: user.id }])
         .select()
         .single();
       
@@ -183,6 +204,7 @@ export const useAddSale = () => {
       });
     },
     onError: (error) => {
+      console.error('Error adding sale:', error);
       toast({
         title: "Error",
         description: "Failed to record sale",
@@ -194,9 +216,13 @@ export const useAddSale = () => {
 
 // Stock entries queries and mutations
 export const useStockEntries = () => {
+  const { user } = useAuth();
+  
   return useQuery({
     queryKey: ['stock_entries'],
     queryFn: async () => {
+      if (!user) throw new Error('User not authenticated');
+      
       const { data, error } = await supabase
         .from('stock_entries')
         .select('*')
@@ -205,6 +231,7 @@ export const useStockEntries = () => {
       if (error) throw error;
       return data as StockEntry[];
     },
+    enabled: !!user,
   });
 };
 
@@ -241,12 +268,15 @@ export const useDeleteProduct = () => {
 export const useAddStockEntry = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (entry: Omit<StockEntry, 'id' | 'created_at'>) => {
+    mutationFn: async (entry: Omit<StockEntry, 'id' | 'created_at' | 'user_id'>) => {
+      if (!user) throw new Error('User not authenticated');
+      
       const { data, error } = await supabase
         .from('stock_entries')
-        .insert([entry])
+        .insert([{ ...entry, user_id: user.id }])
         .select()
         .single();
       
@@ -261,6 +291,7 @@ export const useAddStockEntry = () => {
       });
     },
     onError: (error) => {
+      console.error('Error adding stock entry:', error);
       toast({
         title: "Error",
         description: "Failed to log stock entry",
