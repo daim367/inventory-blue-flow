@@ -50,6 +50,7 @@ export const useProducts = () => {
   return useQuery({
     queryKey: ['products'],
     queryFn: async () => {
+      console.log('Fetching products for user:', user?.id);
       if (!user) throw new Error('User not authenticated');
       
       const { data, error } = await supabase
@@ -57,6 +58,7 @@ export const useProducts = () => {
         .select('*')
         .order('created_at', { ascending: false });
       
+      console.log('Products query result:', { data: data?.length, error });
       if (error) throw error;
       return data as Product[];
     },
