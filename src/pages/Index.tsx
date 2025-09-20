@@ -144,6 +144,18 @@ const Index = () => {
     dateAdded: new Date(p.created_at)
   }));
 
+  // Example mapping in parent component or page
+  const legacySales: LegacySale[] = sales.map(sale => ({
+    id: sale.id,
+    productName: sale.product_name,
+    companyName: sale.company,
+    customerName: sale.customer_name,      // <-- map correctly
+    phoneNumber: sale.phone_number,        // <-- map correctly
+    price: sale.price,
+    quantity: sale.quantity,
+    date: new Date(sale.sale_date),
+  }));
+
   if (productsLoading || salesLoading || stockEntriesLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">

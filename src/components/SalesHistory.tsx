@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 import { CalendarIcon, TrendingUp, Download, X, Search } from "lucide-react";
 import { LegacySale } from "@/pages/Index";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +22,18 @@ interface SalesHistoryProps {
 }
 
 export const SalesHistory = ({ sales }: SalesHistoryProps) => {
+  // Debug: Print all sales data on mount and whenever sales change
+  useEffect(() => {
+    console.log("SalesHistory sales data:", sales);
+    sales.forEach((sale, idx) => {
+      console.log(
+        `Sale #${idx + 1}:`,
+        "Customer Name:", sale.customerName,
+        "Phone Number:", sale.phoneNumber
+      );
+    });
+  }, [sales]);
+
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -29,8 +41,8 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
     const csvData = sales.map(sale => ({
       'Product Name': sale.productName,
       'Company': sale.companyName,
-      'Customer Name': sale.customerName || '',
-      'Phone Number': sale.phoneNumber || '',
+      'Customer Name': sale.customerName,
+      'Phone Number': sale.phoneNumber,
       'Price (PKR)': sale.price.toFixed(2),
       'Units Sold': sale.quantity,
       'Date': formatDate(sale.date)
@@ -221,11 +233,10 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date & Time</TableHead>
+              <TableHead>Date</TableHead>
               <TableHead>Product Name</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Phone</TableHead>
+              <TableHead>Customer Name</TableHead>
+              <TableHead>Phone Number</TableHead>
               <TableHead className="text-right">Quantity</TableHead>
               <TableHead className="text-right">Price/Unit</TableHead>
               <TableHead className="text-right">Total Amount</TableHead>
@@ -239,9 +250,8 @@ export const SalesHistory = ({ sales }: SalesHistoryProps) => {
                   {formatDate(sale.date)}
                 </TableCell>
                 <TableCell className="font-medium">{sale.productName}</TableCell>
-                <TableCell>{sale.companyName}</TableCell>
-                <TableCell>{sale.customerName || '-'}</TableCell>
-                <TableCell>{sale.phoneNumber || '-'}</TableCell>
+                <TableCell>{sale.customerName}</TableCell>   
+                <TableCell>{sale.phoneNumber}</TableCell>  
                 <TableCell className="text-right font-mono">{sale.quantity}</TableCell>
                 <TableCell className="text-right font-mono">PKR {sale.price.toFixed(2)}</TableCell>
                 <TableCell className="text-right font-mono font-semibold text-primary">
