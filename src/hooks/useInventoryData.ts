@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { LegacySale } from '@/pages/Index';
 
 export interface Product {
   id: string;
@@ -41,6 +42,8 @@ export interface StockEntry {
   user_id?: string;
   entry_date: string;
   created_at: string;
+  customer_name?: string;    // Add this
+  phone_number?: string;     // Add this
 }
 
 // Products queries and mutations
@@ -132,7 +135,7 @@ export const useSales = () => {
         .from('sales')
         .select('*')
         .order('sale_date', { ascending: false });
-      
+      console.log("Raw sales data from Supabase:", data); // Debug line
       if (error) throw error;
       return data as Sale[];
     },
@@ -149,9 +152,18 @@ export const useAddSale = () => {
     mutationFn: async (sale: Omit<Sale, 'id' | 'created_at' | 'user_id'>) => {
       if (!user) throw new Error('User must be authenticated');
       
+      // Ensure customer_name and phone_number are included if present
+      const { customer_name, phone_number, ...rest } = sale;
+      const saleData = {
+        ...rest,
+        customer_name: customer_name || null,
+        phone_number: phone_number || null,
+        user_id: user.id
+      };
+
       const { data, error } = await supabase
         .from('sales')
-        .insert([{ ...sale, user_id: user.id }])
+        .insert([saleData])
         .select()
         .single();
       
@@ -211,7 +223,7 @@ export const useStockEntries = () => {
         .from('stock_entries')
         .select('*')
         .order('entry_date', { ascending: false });
-      
+      console.log("Raw stock entries from Supabase:", data); // Debug line
       if (error) throw error;
       return data as StockEntry[];
     },
@@ -282,3 +294,17 @@ export const useAddStockEntry = () => {
     },
   });
 };
+
+// Example mapping for LegacySale
+const { data: sales = [] } = useSales();
+
+const legacySales: LegacySale[] = sales.map(sale => ({
+  id: sale.id,
+  productName: sale.product_name,
+  companyName: sale.company,
+  customerName: sale.customer_name,      // <-- Use this!
+  phoneNumber: sale.phone_number,        // <-- Use this!
+  price: sale.price,
+  quantity: sale.quantity,
+  date: new Date(sale.sale_date),
+}));

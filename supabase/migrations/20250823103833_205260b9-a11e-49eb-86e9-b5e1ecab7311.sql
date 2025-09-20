@@ -25,3 +25,8 @@ FOR ALL
 TO authenticated 
 USING (true) 
 WITH CHECK (true);
+
+create policy "Enable insert for authenticated users only"
+on "public"."stock_entries"
+for insert to authenticated
+with check (true);
