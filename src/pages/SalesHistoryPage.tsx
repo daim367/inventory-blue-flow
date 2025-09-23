@@ -17,6 +17,8 @@ const SalesHistoryPage = () => {
     price: s.price,
     companyName: s.company || '',
     quantity: s.quantity,
+    customerName: s.customer_name || '',
+    phoneNumber: s.phone_number || '',
     date: new Date(s.sale_date)
   }));
 
