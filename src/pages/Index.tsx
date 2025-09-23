@@ -102,6 +102,7 @@ const Index = () => {
   };
 
   const handleLogStockEntry = (entry: Omit<LegacyStockEntry, 'id'>) => {
+    console.log('Logging stock entry:', entry);
     addStockEntryMutation.mutate({
       product_name: entry.productName,
       company: entry.company,

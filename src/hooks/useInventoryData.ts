@@ -51,7 +51,10 @@ export const useProducts = () => {
     queryKey: ['products'],
     queryFn: async () => {
       console.log('Fetching products for user:', user?.id);
-      if (!user) throw new Error('User not authenticated');
+      if (!user) {
+        console.error('User not authenticated for products query');
+        throw new Error('User not authenticated');
+      }
       
       const { data, error } = await supabase
         .from('products')
@@ -59,7 +62,10 @@ export const useProducts = () => {
         .order('created_at', { ascending: false });
       
       console.log('Products query result:', { data: data?.length, error });
-      if (error) throw error;
+      if (error) {
+        console.error('Products query error:', error);
+        throw error;
+      }
       return data as Product[];
     },
     enabled: !!user,
@@ -274,7 +280,11 @@ export const useAddStockEntry = () => {
 
   return useMutation({
     mutationFn: async (entry: Omit<StockEntry, 'id' | 'created_at' | 'user_id'>) => {
-      if (!user) throw new Error('User not authenticated');
+      console.log('Adding stock entry:', entry, 'User:', user?.id);
+      if (!user) {
+        console.error('User not authenticated for stock entry');
+        throw new Error('User not authenticated');
+      }
       
       const { data, error } = await supabase
         .from('stock_entries')
@@ -282,10 +292,15 @@ export const useAddStockEntry = () => {
         .select()
         .single();
       
-      if (error) throw error;
+      console.log('Stock entry result:', { data, error });
+      if (error) {
+        console.error('Stock entry database error:', error);
+        throw error;
+      }
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Stock entry added successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['stock_entries'] });
       toast({
         title: "Success",
